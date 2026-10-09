@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тренажёр: ответ клиенту</title>
+<style>
+  :root{
+    --bg:#f4f5f7;
+    --card:#ffffff;
+    --ink:#14181f;
+    --ink-soft:#5b6472;
+    --line:#e2e5ea;
+    --accent:#1f5fd6;
+    --accent-soft:#eaf0fd;
+    --ok:#12734a;
+    --ok-soft:#e7f5ee;
+    --warn:#9a5b00;
+    --warn-soft:#fdf3e3;
+    --bad:#a3231f;
+    --bad-soft:#fdeceb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    padding:20px 14px 48px;
+    background:var(--bg);
+    color:var(--ink);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+  header{margin-bottom:18px;}
+  .kicker{
+    font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-soft);margin-bottom:6px;
+  }
+  h1{font-size:23px;line-height:1.25;margin:0 0 8px;}
+  .lead{color:var(--ink-soft);font-size:15px;margin:0;}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:16px;margin-bottom:14px;
+  }
+  .quote{
+    border-left:3px solid var(--accent);background:var(--accent-soft);
+    padding:12px 14px;border-radius:0 10px 10px 0;margin:0 0 14px;
+    font-size:15px;
+  }
+  .quote b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;font-weight:600;}
+  h2{font-size:16px;margin:0 0 10px;}
+  .step-tag{
+    display:inline-block;font-size:11px;font-weight:700;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--accent);background:var(--accent-soft);
+    padding:3px 8px;border-radius:20px;margin-bottom:8px;
+  }
+
+  /* ---------- форма регистрации ---------- */
+  .field{display:block;margin-bottom:12px;}
+  .field-label{
+    display:block;font-size:13px;font-weight:600;color:var(--ink-soft);
+    margin-bottom:5px;letter-spacing:.02em;
+  }
+  .field input{
+    width:100%;padding:12px;font:inherit;font-size:16px;
+    border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);
+  }
+  .field input:focus{
+    outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  .field input.bad{border-color:var(--bad);background:var(--bad-soft);}
+  .field .err{font-size:12.5px;color:var(--bad);margin-top:4px;display:none;}
+  .field.show-err .err{display:block;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+  @media (max-width:430px){.grid2{grid-template-columns:1fr;}}
+
+  .who{
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;
+    background:#fff;border:1px solid var(--line);border-radius:12px;
+    padding:10px 13px;margin-bottom:14px;font-size:14px;
+  }
+  .who-name{font-weight:600;}
+  .who-office{color:var(--ink-soft);font-size:13px;}
+  .who button{
+    font:inherit;font-size:12.5px;color:var(--accent);background:none;border:none;
+    cursor:pointer;text-decoration:underline;padding:4px;
+  }
+
+  .opt{
+    display:flex;gap:11px;align-items:flex-start;
+    border:1px solid var(--line);border-radius:11px;padding:12px;
+    margin-bottom:9px;cursor:pointer;background:#fff;
+    transition:border-color .12s, background .12s;
+  }
+  .opt:hover{border-color:#c3cbdb;}
+  .opt input{margin:5px 0 0;flex:0 0 auto;accent-color:var(--accent);width:17px;height:17px;}
+  .opt span{font-size:15px;}
+  .opt.sel{border-color:var(--accent);background:var(--accent-soft);}
+  .opt.right{border-color:var(--ok);background:var(--ok-soft);}
+  .opt.wrong{border-color:var(--bad);background:var(--bad-soft);}
+  .opt.locked{cursor:default;}
+  .opt.locked:hover{border-color:var(--line);}
+  .feedback{
+    font-size:14px;border-radius:10px;padding:11px 13px;margin-top:10px;
+    display:none;
+  }
+  .feedback.show{display:block;}
+  .feedback.good{background:var(--ok-soft);color:#0d5738;}
+  .feedback.bad{background:var(--bad-soft);color:#7d1a17;}
+  textarea{
+    width:100%;min-height:120px;padding:12px;font:inherit;font-size:15px;
+    border:1px solid var(--line);border-radius:11px;resize:vertical;background:#fff;
+    color:var(--ink);
+  }
+  textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+  .hint{font-size:13px;color:var(--ink-soft);margin:8px 0 0;}
+  .counter{font-size:12px;color:var(--ink-soft);text-align:right;margin-top:5px;}
+  button{
+    font:inherit;font-weight:600;border-radius:10px;cursor:pointer;
+    border:1px solid transparent;padding:12px 18px;transition:opacity .12s, background .12s;
+  }
+  button:active{opacity:.85;}
+  .primary{background:var(--accent);color:#fff;}
+  .ghost{background:#fff;border-color:var(--line);color:var(--ink);}
+  .ghost:hover{border-color:#c3cbdb;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+  .crit{
+    border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:9px;
+  }
+  .crit-head{display:flex;justify-content:space-between;gap:12px;align-items:center;}
+  .crit-name{font-size:15px;font-weight:600;}
+  .crit-desc{font-size:13px;color:var(--ink-soft);margin-top:4px;}
+  .toggle{display:flex;gap:6px;flex:0 0 auto;}
+  .toggle button{
+    padding:7px 12px;font-size:13px;font-weight:600;border-radius:8px;
+    background:#fff;border:1px solid var(--line);color:var(--ink-soft);
+  }
+  .toggle button.on-yes{background:var(--ok);border-color:var(--ok);color:#fff;}
+  .toggle button.on-no{background:var(--bad);border-color:var(--bad);color:#fff;}
+  .badge{
+    display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--warn);background:var(--warn-soft);
+    padding:2px 7px;border-radius:6px;margin-left:6px;
+  }
+  .checks{list-style:none;padding:0;margin:0;}
+  .checks li{
+    font-size:14px;padding:9px 0 9px 27px;border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .checks li:last-child{border-bottom:none;}
+  .checks li:before{
+    position:absolute;left:0;top:9px;font-weight:700;font-size:14px;
+  }
+  .checks li.yes:before{content:"✓";color:var(--ok);}
+  .checks li.no:before{content:"!";color:var(--warn);}
+  .verdict{
+    border-radius:12px;padding:15px;margin-bottom:14px;
+  }
+  .verdict.pass{background:var(--ok-soft);border:1px solid #b8e0cc;}
+  .verdict.work{background:var(--warn-soft);border:1px solid #edd9b4;}
+  .verdict h2{margin-bottom:6px;}
+  .verdict p{margin:0;font-size:15px;}
+  .out{
+    width:100%;min-height:200px;padding:12px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    border:1px solid var(--line);border-radius:11px;background:#fbfcfd;color:var(--ink);
+    resize:vertical;
+  }
+  .hide{display:none;}
+  .foot{font-size:13px;color:var(--ink-soft);text-align:center;margin-top:22px;}
+  .notice{
+    font-size:13px;border-radius:10px;padding:11px 13px;margin-top:12px;
+    background:var(--accent-soft);color:#1b4eae;display:none;
+  }
+  .notice.show{display:block;}
+  .toast{
+    position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+    background:var(--ink);color:#fff;font-size:14px;padding:10px 16px;border-radius:9px;
+    opacity:0;pointer-events:none;transition:opacity .2s;z-index:99;
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">Микроурок · практика</div>
+    <h1>Ответ клиенту без давления</h1>
+    <p class="lead">3–4 минуты. Ответы остаются на вашем устройстве. В конце можно скопировать свой результат и показать куратору.</p>
+  </header>
+
+  <!-- ============ ЗАПИСЬ ОБ УЧАСТНИКЕ ============ -->
+  <div class="card" id="step0">
+    <span class="step-tag">Знакомство</span>
+    <h2>Представьтесь</h2>
+    <p class="hint" style="margin-bottom:14px;">
+      Нужно, чтобы куратор знал, чью работу разбирает. Дальше тренажёр анонимный — преподаватель видит только вашу реплику и самооценку.
+    </p>
+
+    <div class="grid2">
+      <label class="field" id="fLast">
+        <span class="field-label">Фамилия</span>
+        <input type="text" id="regLast" autocomplete="family-name" placeholder="Иванов">
+        <span class="err">Укажите фамилию</span>
+      </label>
+      <label class="field" id="fFirst">
+        <span class="field-label">Имя</span>
+        <input type="text" id="regFirst" autocomplete="given-name" placeholder="Иван">
+        <span class="err">Укажите имя</span>
+      </label>
+    </div>
+
+    <label class="field" id="fMiddle">
+      <span class="field-label">Отчество</span>
+      <input type="text" id="regMiddle" autocomplete="additional-name" placeholder="Иванович">
+      <span class="err">Укажите отчество</span>
+    </label>
+
+    <label class="field" id="fOffice">
+      <span class="field-label">Агентский центр или универсальный офис</span>
+      <input type="text" id="regOffice" placeholder="Например: АЦ «Северный» или УО Тверь-2">
+      <span class="err">Укажите подразделение</span>
+    </label>
+
+    <div class="row">
+      <button class="primary" id="startBtn">Начать тренажёр</button>
+    </div>
+    <div class="notice" id="regNotice"></div>
+  </div>
+
+  <div class="who hide" id="whoBar">
+    <div>
+      <div class="who-name" id="whoName"></div>
+      <div class="who-office" id="whoOffice"></div>
+    </div>
+    <button id="editReg">изменить данные</button>
+  </div>
+
+  <!-- ============ ШАГ 1 ============ -->
+  <div class="card hide" id="step1">
+    <div class="quote">
+      <b>Клиент говорит</b>
+      «Я молодой, у меня пока не так много денег. Не уверен, что мне вообще нужна страховка».
+    </div>
+
+    <span class="step-tag">Шаг 1 из 3</span>
+    <h2>Выберите первую реакцию</h2>
+
+    <label class="opt" data-opt="A">
+      <input type="radio" name="first" value="A">
+      <span>Именно в молодом возрасте важно думать о будущем, поэтому полис лучше оформить сейчас.</span>
+    </label>
+    <label class="opt" data-opt="B">
+      <input type="radio" name="first" value="B">
+      <span>Понимаю. Давайте сначала выясним, какие риски для вас актуальны и какой бюджет комфортен.</span>
+    </label>
+    <label class="opt" data-opt="C">
+      <input type="radio" name="first" value="C">
+      <span>Тогда возьмите самый дешёвый полис — он всё равно лучше, чем ничего.</span>
+    </label>
+
+    <div class="feedback" id="fb1"></div>
+
+    <div class="row" id="nav1">
+      <button class="primary" id="check1">Проверить</button>
+    </div>
+    <div class="row hide" id="next1">
+      <button class="primary" id="toStep2">Дальше →</button>
+    </div>
+  </div>
+
+  <!-- ============ ШАГ 2 ============ -->
+  <div class="card hide" id="step2">
+    <div class="quote">
+      <b>Клиент говорит</b>
+      «Я молодой, у меня пока не так много денег. Не уверен, что мне вообще нужна страховка».
+    </div>
+
+    <span class="step-tag">Шаг 2 из 3</span>
+    <h2>Напишите, что скажете дальше</h2>
+    <p class="hint" style="margin-bottom:10px;">
+      Постарайтесь: задать вопрос о том, что важно клиенту; объяснить, за что он платит, включая цену и исключения; не давить.
+    </p>
+    <textarea id="reply" placeholder="Например: Понимаю. Давайте посмотрим, что именно вас беспокоит..."></textarea>
+    <div class="counter"><span id="count">0</span> знаков</div>
+
+    <div class="row">
+      <button class="primary" id="check2">Проверить реплику</button>
+    </div>
+
+    <div id="analysis" class="hide" style="margin-top:14px;">
+      <h2 style="font-size:15px;">Что видно в вашей реплике</h2>
+      <ul class="checks" id="checks"></ul>
+      <p class="hint">Это проверка по признакам, а не оценка. Ваши слова понимает живой куратор, а не скрипт.</p>
+      <div class="row">
+        <button class="primary" id="toStep3">К самооценке →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ШАГ 3 ============ -->
+  <div class="card hide" id="step3">
+    <span class="step-tag">Шаг 3 из 3</span>
+    <h2>Оцените свою реплику</h2>
+    <p class="hint" style="margin-bottom:14px;">
+      Честно, для себя. Отметьте, что в вашей реплике действительно есть.
+    </p>
+    <div id="criteria"></div>
+
+    <div class="row">
+      <button class="primary" id="finish">Показать результат</button>
+    </div>
+  </div>
+
+  <!-- ============ РЕЗУЛЬТАТ ============ -->
+  <div class="card hide" id="result">
+    <div class="verdict" id="verdict"></div>
+
+    <h2>Ваша реплика</h2>
+    <div class="quote" id="finalReply" style="font-size:14px;"></div>
+
+    <h2>Для куратора</h2>
+    <p class="hint" style="margin-bottom:10px;">Скопируйте и отправьте куратору, если хотите разбор.</p>
+    <textarea class="out" id="output" readonly></textarea>
+
+    <div class="row">
+      <button class="primary" id="copyBtn">Скопировать</button>
+      <button class="ghost" id="restartBtn">Пройти заново</button>
+    </div>
+  </div>
+
+  <p class="foot">Ничего не отправляется с этого устройства по сети, кроме записи о вас в форму куратора.</p>
+</div>
+
+<div class="toast" id="toast">Готово</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ==================================================================
+     НАСТРОЙКА ПЕРЕДАЧИ ДАННЫХ В ЯНДЕКС.ФОРМУ
+     ------------------------------------------------------------------
+     Форма куратора:
+       https://forms.yandex.ru/u/6ac8d2f895add54d424874cb/
+
+     В форме сейчас два обязательных поля: «ФИО» и «Название АЦ/УО».
+     Тренажёр передаёт в них данные через параметры адреса — так это
+     устроено в Яндекс.Формах (prefill через GET-параметры).
+
+     ШАГ 1. В редакторе формы откройте каждый вопрос и задайте у него
+             «Идентификатор вопроса»:
+               у вопроса «ФИО»            ->  fio
+               у вопроса «Название АЦ/УО» ->  auo
+
+     ШАГ 2. Здесь ниже в params слева стоит ключ данных тренажёра,
+            справа — идентификатор вопроса из редактора. Совпадать
+            должны именно эти строки.
+
+     Если идентификаторы не задать, Яндекс присвоит свои вида
+     answer_short_text_1685088 — тогда впишите их сюда вручную,
+     их видно в редакторе формы.
+
+     Ссылка, которую получит участник, будет такой:
+       https://forms.yandex.ru/u/6ac8d2f895add54d424874cb/?fio=Иванов+Иван+Иванович&auo=АЦ+Северный
+     Пробелы заменяются на знак «+» — это требование Яндекс.Форм.
+     ================================================================== */
+  var FORM = {
+    url: "https://forms.yandex.ru/u/6ac8d2f895add54d424874cb/",
+    params: {
+      fio:    "fio",   // куда идёт ФИО целиком (фамилия + имя + отчество)
+      office: "auo"    // куда идёт название агентского центра / универсального офиса
+    }
+  };
+  /* ======================= конец настройки ========================= */
+
+  var person = { last:"", first:"", middle:"", office:"" };
+  var firstAnswer = null;
+  var lastAnalysis = null;
+  var scores = {};
+
+  var FEEDBACK = {
+    A: { good:false, text:"Давление плюс скрытая оценка: «в вашем возрасте рано думать иначе». Возражение про деньги не разобрано, потребность не выяснена." },
+    B: { good:true,  text:"Верный старт. Вы признали сомнение клиента и вместо аргументов задали вопрос о рисках и бюджете — без этого любой следующий шаг будет угадыванием." },
+    C: { good:false, text:"Решение принято за клиента: вы подменили его выбор своим «подешевле». Это не отвечает на настоящий вопрос — зачем ему полис вообще." }
+  };
+
+  var CRITERIA = [
+    {key:"need",    name:"Выявление потребности", desc:"В реплике есть вопрос о приоритетах, рисках или бюджете клиента.", blocking:false},
+    {key:"explain", name:"Понятное объяснение",   desc:"Продукт связывается с конкретной потребностью, без обещаний «для всех».", blocking:false},
+    {key:"transp",  name:"Прозрачность",          desc:"Готовность назвать стоимость, покрытие, исключения и ограничения.", blocking:true},
+    {key:"nopress", name:"Отсутствие давления",   desc:"Нет манипуляции страхом, навязывания и оценки самого клиента.", blocking:true},
+    {key:"next",    name:"Следующий шаг",         desc:"Предложен удобный для клиента формат продолжения разговора.", blocking:false}
+  ];
+
+  function $(id){ return document.getElementById(id); }
+
+  var toastEl = $("toast");
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    setTimeout(function(){ toastEl.classList.remove("show"); }, 1800);
+  }
+
+  function saveLocal(){
+    try { localStorage.setItem("microlearn_person", JSON.stringify(person)); } catch(e){}
+  }
+  function loadLocal(){
+    try {
+      var raw = localStorage.getItem("microlearn_person");
+      if(!raw) return;
+      var p = JSON.parse(raw);
+      if(p && typeof p === "object"){
+        person.last = p.last || "";
+        person.first = p.first || "";
+        person.middle = p.middle || "";
+        person.office = p.office || "";
+      }
+    } catch(e){}
+  }
+
+  /* ---------- запись об участнике ---------- */
+  function personFilled(){
+    return !!(person.last && person.first && person.middle && person.office);
+  }
+
+  function showWho(){
+    $("whoName").textContent = person.last + " " + person.first + " " + person.middle;
+    $("whoOffice").textContent = person.office;
+    $("whoBar").classList.remove("hide");
+  }
+
+  function fillInputs(){
+    $("regLast").value   = person.last;
+    $("regFirst").value  = person.first;
+    $("regMiddle").value = person.middle;
+    $("regOffice").value = person.office;
+  }
+
+  function openRegistration(keepValues){
+    $("step0").classList.remove("hide");
+    $("whoBar").classList.add("hide");
+    ["step1","step2","step3","result"].forEach(function(id){ $(id).classList.add("hide"); });
+    if(keepValues) fillInputs();
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  function buildFormUrl(){
+    if(!FORM.url) return null;
+
+    var fio = [person.last, person.first, person.middle]
+      .filter(Boolean).join(" ");
+
+    var pairs = [];
+    if(FORM.params.fio && fio){
+      pairs.push(encodeURIComponent(FORM.params.fio) + "=" + encodeURIComponent(fio));
+    }
+    if(FORM.params.office && person.office){
+      pairs.push(encodeURIComponent(FORM.params.office) + "=" + encodeURIComponent(person.office));
+    }
+    if(!pairs.length) return null;
+
+    var sep = FORM.url.indexOf("?") === -1 ? "?" : "&";
+    var base = FORM.url.replace(/\/$/, "").replace(/\/success$/, "");
+    return base + sep + pairs.join("&").replace(/%20/g, "+");
+  }
+
+  $("startBtn").addEventListener("click", function(){
+    var fields = [
+      {box:"fLast",   input:"regLast",   key:"last",   label:"фамилию"},
+      {box:"fFirst",  input:"regFirst",  key:"first",  label:"имя"},
+      {box:"fMiddle", input:"regMiddle", key:"middle", label:"отчество"},
+      {box:"fOffice", input:"regOffice", key:"office", label:"подразделение"}
+    ];
+    var ok = true;
+    fields.forEach(function(f){
+      var val = $(f.input).value.trim();
+      var box = $(f.box);
+      if(val.length < 2){
+        box.classList.add("show-err");
+        $(f.input).classList.add("bad");
+        ok = false;
+      } else {
+        box.classList.remove("show-err");
+        $(f.input).classList.remove("bad");
+        person[f.key] = val;
+      }
+    });
+    if(!ok){ toast("Заполните все поля"); return; }
+
+    saveLocal();
+
+    var url = buildFormUrl();
+    var notice = $("regNotice");
+
+    if(url){
+      window.open(url, "_blank", "noopener");
+      notice.innerHTML = "Запись о вас открыта в форме — отправьте её и вернитесь сюда. Если вкладка не открылась, <a href='" + url + "' target='_blank' rel='noopener'>нажмите эту ссылку</a>.";
+      notice.classList.add("show");
+    } else {
+      notice.innerHTML = "Регистрация пройдена. Не забудьте отметить себя в форме куратора — данные для этого: <b>" +
+        person.last + " " + person.first + " " + person.middle + ", " + person.office + "</b>";
+      notice.classList.add("show");
+    }
+
+    showWho();
+    $("step0").classList.add("hide");
+    $("step1").classList.remove("hide");
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+
+  ["regLast","regFirst","regMiddle","regOffice"].forEach(function(id){
+    $(id).addEventListener("input", function(){
+      var box = $(id).parentNode;
+      if(box && box.classList) box.classList.remove("show-err");
+      $(id).classList.remove("bad");
+    });
+  });
+
+  $("editReg").addEventListener("click", function(){ openRegistration(true); });
+
+  /* ---------- Шаг 1 ---------- */
+  var opts = document.querySelectorAll(".opt");
+  Array.prototype.forEach.call(opts, function(el){
+    el.addEventListener("click", function(){
+      if(el.classList.contains("locked")) return;
+      Array.prototype.forEach.call(opts, function(o){ o.classList.remove("sel"); });
+      el.classList.add("sel");
+      el.querySelector("input").checked = true;
+      firstAnswer = el.getAttribute("data-opt");
+      $("fb1").classList.remove("show");
+      $("nav1").classList.remove("hide");
+      $("next1").classList.add("hide");
+    });
+  });
+
+  $("check1").addEventListener("click", function(){
+    if(!firstAnswer){ toast("Выберите один вариант"); return; }
+    var fb = FEEDBACK[firstAnswer];
+    Array.prototype.forEach.call(opts, function(el){
+      var code = el.getAttribute("data-opt");
+      el.classList.add("locked");
+      el.classList.remove("sel");
+      if(code === "B") el.classList.add("right");
+      if(code === firstAnswer && code !== "B") el.classList.add("wrong");
+    });
+    var box = $("fb1");
+    box.className = "feedback show " + (fb.good ? "good" : "bad");
+    box.innerHTML = "<b>" + (fb.good ? "Верно. " : "Не лучший вариант. ") + "</b>" + fb.text +
+      (fb.good ? "" : "<br><br>Правильный старт — вариант Б: сначала выяснить риски и комфортный бюджет, только потом говорить о продукте.");
+    $("nav1").classList.add("hide");
+    $("next1").classList.remove("hide");
+  });
+
+  $("toStep2").addEventListener("click", function(){
+    $("step1").classList.add("hide");
+    $("step2").classList.remove("hide");
+    $("reply").focus();
+  });
+
+  /* ---------- Шаг 2 ---------- */
+  var reply = $("reply");
+  reply.addEventListener("input", function(){
+    $("count").textContent = reply.value.trim().length;
+  });
+
+  var PRESSURE = [
+    "не стоит рисковать","лучше оформить сейчас","только сегодня","успейте",
+    "вы же","в вашем возрасте","вы молодой","пора уже","все так делают",
+    "последний день","гарантирую","точно пригодится"
+  ];
+
+  function analyze(text){
+    var t = text.toLowerCase();
+    var res = {};
+    res.question = /[?]/.test(text);
+    var hasBudget = /(бюджет|стоимост|цен|дешев|дорог|рубл|в месяц|платеж|сколько)/.test(t);
+    res.need = res.question && /(важн|нужн|что для вас|какие риск|интересу|беспоко|приоритет|ситуац|планир|бюджет)/.test(t);
+    res.price = hasBudget;
+    res.coverage = /(покрыва|покрыти|защит|что входит|случаи|программ|риск)/.test(t);
+    res.limits = /(исключен|ограничен|не покрыва|услови|оговорк|не входит)/.test(t);
+    res.transp = res.price && res.coverage;
+    res.pressure = PRESSURE.filter(function(p){ return t.indexOf(p) !== -1; });
+    res.nextStep = /(прислать|отправ|пришлю|скину|покаж|ссылк|сравн|документ|материал|встреч|созвон|напиш|выбер|удобн|готовы|могу)/.test(t);
+    return res;
+  }
+
+  $("check2").addEventListener("click", function(){
+    var text = reply.value.trim();
+    if(text.length < 25){ toast("Напишите ответ чуть подробнее"); return; }
+    lastAnalysis = analyze(text);
+    var a = lastAnalysis;
+    var items = [
+      {ok:a.need, label: a.need
+        ? "Есть вопрос о том, что важно клиенту — это главное."
+        : "Вопроса о потребности нет. Без него вы отвечаете на своё предположение, а не на ситуацию клиента."},
+      {ok:a.price, label: a.price
+        ? "Названа или затронута цена — клиент видит, о каких деньгах речь."
+        : "Цена не упомянута. Клиент, который говорит про деньги, ждёт именно этого."},
+      {ok:a.limits, label: a.limits
+        ? "Упомянуты исключения или ограничения — это признак честного разговора."
+        : "Про исключения и ограничения ничего нет. Дополните: клиент должен знать, что полис не покрывает."},
+      {ok:a.pressure.length === 0, label: a.pressure.length === 0
+        ? "Давящих формулировок не найдено."
+        : "Найдены фразы давления: «" + a.pressure.join("», «") + "». Уберите их."},
+      {ok:a.nextStep, label: a.nextStep
+        ? "Есть предложение следующего шага."
+        : "Непонятно, что будет дальше. Предложите формат: прислать условия, сравнить два варианта, созвониться."}
+    ];
+
+    $("checks").innerHTML = items.map(function(i){
+      return '<li class="' + (i.ok ? "yes" : "no") + '">' + i.label + "</li>";
+    }).join("");
+
+    $("analysis").classList.remove("hide");
+    $("analysis").scrollIntoView({behavior:"smooth", block:"nearest"});
+  });
+
+  $("toStep3").addEventListener("click", function(){
+    if(!lastAnalysis){ toast("Сначала проверьте реплику"); return; }
+    $("step2").classList.add("hide");
+    $("step3").classList.remove("hide");
+    renderCriteria();
+    $("step3").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+
+  /* ---------- Шаг 3 ---------- */
+  function renderCriteria(){
+    $("criteria").innerHTML = CRITERIA.map(function(c){
+      return '<div class="crit">' +
+        '<div class="crit-head">' +
+          '<div><div class="crit-name">' + c.name +
+            (c.blocking ? '<span class="badge">обязательно</span>' : "") +
+          '</div></div>' +
+          '<div class="toggle" data-key="' + c.key + '">' +
+            '<button data-val="yes">Да</button>' +
+            '<button data-val="no">Нет</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="crit-desc">' + c.desc + "</div>" +
+      "</div>";
+    }).join("");
+
+    Array.prototype.forEach.call(document.querySelectorAll(".toggle"), function(tg){
+      var key = tg.getAttribute("data-key");
+      Array.prototype.forEach.call(tg.querySelectorAll("button"), function(b){
+        b.addEventListener("click", function(){
+          var val = b.getAttribute("data-val");
+          scores[key] = (val === "yes");
+          Array.prototype.forEach.call(tg.querySelectorAll("button"), function(x){
+            x.classList.remove("on-yes","on-no");
+          });
+          b.classList.add(val === "yes" ? "on-yes" : "on-no");
+        });
+      });
+    });
+  }
+
+  /* ---------- Результат ---------- */
+  $("finish").addEventListener("click", function(){
+    var unanswered = CRITERIA.filter(function(c){ return scores[c.key] === undefined; });
+    if(unanswered.length){ toast("Отметьте все критерии"); return; }
+
+    var total = 0;
+    CRITERIA.forEach(function(c){ if(scores[c.key]) total++; });
+
+    var transparency = scores.transp === true;
+    var noPressure = scores.nopress === true;
+    var blockingOk = transparency && noPressure;
+    var passed = total >= 4 && blockingOk;
+
+    var v = $("verdict");
+    if(passed){
+      v.className = "verdict pass";
+      v.innerHTML = "<h2>Задание зачтено</h2><p>Вы набрали " + total + " из 5, и оба обязательных критерия выполнены. Это та коммуникация, которая работает вдолгую: клиент понимает, за что платит, и решает сам.</p>";
+    } else {
+      v.className = "verdict work";
+      var why = [];
+      if(!transparency) why.push("не проговорены стоимость, покрытие и исключения");
+      if(!noPressure) why.push("есть давление или навязывание");
+      v.innerHTML = "<h2>Над чем поработать</h2><p>Набрано " + total + " из 5." +
+        (blockingOk ? "" : " Обязательные критерии не выполнены: " + why.join("; ") + ". Пока это так, баллы не меняют картину — доработайте реплику.") +
+        "</p>";
+    }
+
+    $("finalReply").textContent = reply.value.trim();
+
+    var lines = [];
+    lines.push("ТРЕНАЖЁР: ОТВЕТ КЛИЕНТУ БЕЗ ДАВЛЕНИЯ");
+    lines.push("=====================================");
+    lines.push("");
+    lines.push("Участник: " + person.last + " " + person.first + " " + person.middle);
+    lines.push("Подразделение: " + person.office);
+    lines.push("");
+    lines.push("Ситуация: клиент говорит, что он молодой, денег немного и он не уверен, что ему нужна страховка.");
+    lines.push("");
+    lines.push("Шаг 1. Первая реакция: вариант " + firstAnswer + (firstAnswer === "B" ? " (верный)" : ""));
+    lines.push("");
+    lines.push("Шаг 2. Моя реплика:");
+    lines.push(reply.value.trim());
+    lines.push("");
+    lines.push("Шаг 3. Самооценка:");
+    CRITERIA.forEach(function(c){
+      lines.push("  " + (scores[c.key] ? "[+]" : "[ ]") + " " + c.name + (c.blocking ? " (обязательный)" : ""));
+    });
+    lines.push("");
+    lines.push("Итог: " + total + " из 5. Обязательные критерии: " + (blockingOk ? "выполнены" : "не выполнены"));
+    lines.push("Результат: " + (passed ? "задание зачтено" : "требует доработки"));
+    lines.push("");
+    lines.push("Дата: " + new Date().toLocaleString("ru-RU"));
+
+    $("output").value = lines.join("\n");
+
+    $("step3").classList.add("hide");
+    $("result").classList.remove("hide");
+    $("result").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+
+  $("copyBtn").addEventListener("click", function(){
+    var ta = $("output");
+    var text = ta.value;
+    var done = false;
+    try {
+      ta.removeAttribute("readonly");
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      done = document.execCommand("copy");
+      ta.setAttribute("readonly","");
+    } catch(e){ done = false; }
+    if(!done && navigator.clipboard){
+      navigator.clipboard.writeText(text).then(function(){ toast("Скопировано"); });
+    } else {
+      toast(done ? "Скопировано" : "Выделите текст и скопируйте вручную");
+    }
+    window.getSelection().removeAllRanges();
+  });
+
+  $("restartBtn").addEventListener("click", function(){
+    firstAnswer = null;
+    lastAnalysis = null;
+    scores = {};
+    reply.value = "";
+    $("count").textContent = "0";
+    $("fb1").className = "feedback";
+    $("fb1").innerHTML = "";
+    $("analysis").classList.add("hide");
+    $("regNotice").classList.remove("show");
+    Array.prototype.forEach.call(opts, function(el){
+      el.classList.remove("right","wrong","sel","locked");
+      el.querySelector("input").checked = false;
+    });
+    $("nav1").classList.remove("hide");
+    $("next1").classList.add("hide");
+    $("result").classList.add("hide");
+    $("step3").classList.add("hide");
+    $("step2").classList.add("hide");
+    $("step0").classList.add("hide");
+    $("step1").classList.remove("hide");
+    if(personFilled()) showWho();
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+
+  /* ---------- старт: если данные уже вводили, шаг знакомства не показываем ---------- */
+  loadLocal();
+  if(personFilled()){
+    showWho();
+    $("step0").classList.add("hide");
+    $("step1").classList.remove("hide");
+  } else {
+    openRegistration(false);
+  }
+})();
+</script>
+</body>
+</html>
